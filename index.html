@@ -6,7 +6,6 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    /* ਪ੍ਰੋਫੈਸ਼ਨਲ ਨਿਊਜ਼ਰੂਮ ਕਲਰਡ ਬੈਕਗ੍ਰਾਊਂਡ (Dark Blue Studio Gradient) */
     body { 
       background: radial-gradient(circle at center, #0f1c3f 0%, #080d1a 60%, #03060c 100%);
       color: #fff; 
@@ -18,7 +17,7 @@
       flex-direction: column;
     }
     
-    /* ਸੈਂਟਰ ਵਿੱਚ ਚੱਲਣ ਵਾਲੀ ਪ੍ਰੋਫੈਸ਼ਨਲ ਬ੍ਰਾਂਡਿੰਗ ਪੱਟੀ */
+    /* ਸੈਂਟਰ ਬ੍ਰਾਂਡਿੰਗ + ਲਾਈਵ ਸਿੰਕ ਬਟਨ */
     .news-ticker-bar {
       position: absolute;
       top: 50%;
@@ -26,14 +25,19 @@
       transform: translate(-50%, -50%);
       z-index: 100;
       background: linear-gradient(135deg, #d31027 0%, #ea384d 100%);
-      padding: 6px 30px;
+      padding: 6px 24px;
       border-radius: 40px;
       border: 2px solid #ff7675;
-      box-shadow: 0 0 25px rgba(234, 56, 77, 0.7), inset 0 0 12px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 25px rgba(234, 56, 77, 0.7);
       display: flex;
       align-items: center;
       gap: 12px;
-      pointer-events: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .news-ticker-bar:hover {
+      transform: translate(-50%, -50%) scale(1.04);
     }
 
     .live-dot {
@@ -51,16 +55,23 @@
     }
 
     .brand-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 900;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: #ffffff;
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
       white-space: nowrap;
     }
 
-    /* 6 ਸਕ੍ਰੀਨਾਂ ਦਾ ਗਰਿੱਡ - ਵਿਚਕਾਰ ਹਲਕਾ ਨੀਲਾ ਸਟੂਡੀਓ ਬਾਰਡਰ */
+    .sync-hint {
+      font-size: 10px;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 10px;
+      color: #ffcccc;
+    }
+
     .grid { 
       display: grid; 
       grid-template-columns: repeat(3, 1fr); 
@@ -78,10 +89,8 @@
       overflow: hidden; 
       border: 1px solid rgba(0, 168, 255, 0.35);
       border-radius: 4px;
-      box-shadow: inset 0 0 10px rgba(0, 168, 255, 0.15);
     }
     
-    /* ਮਾਊਸ ਲੈ ਕੇ ਜਾਣ 'ਤੇ ਦਿਖਾਈ ਦੇਣ ਵਾਲਾ ਐਡਿਟ ਬਾਰ */
     .header { 
       position: absolute;
       top: 0;
@@ -94,7 +103,7 @@
       align-items: center; 
       z-index: 20;
       opacity: 0;
-      transition: opacity 0.2s ease-in-out;
+      transition: opacity 0.2s;
       border-bottom: 1px solid #00a8ff;
     }
     
@@ -107,7 +116,6 @@
     .controls input { background: #111a2e; border: 1px solid #00a8ff; color: #fff; padding: 2px 6px; font-size: 11px; width: 110px; border-radius: 3px; }
     .controls button { background: #e84118; color: #fff; border: none; padding: 2px 8px; font-size: 11px; cursor: pointer; border-radius: 3px; font-weight: bold; }
     
-    /* ਵੀਡੀਓਜ਼ ਦੇ YouTube ਕੰਟਰੋਲ ਲੁਕਾਉਣ ਲਈ ਪਰਫੈਕਟ ਕ੍ਰੌਪ */
     .video-box { 
       width: 100%; 
       height: 100%; 
@@ -127,10 +135,11 @@
 </head>
 <body>
 
-  <!-- ਪ੍ਰੋਫੈਸ਼ਨਲ ਸੈਂਟਰ ਬੈਜ -->
-  <div class="news-ticker-bar">
+  <!-- ਸੈਂਟਰ ਬੈਜ: ਇਸ 'ਤੇ ਕਲਿੱਕ ਕਰਨ ਨਾਲ ਸਾਰੇ ਚੈਨਲ ਤੁਰੰਤ Live Edge 'ਤੇ ਰੀਲੋਡ ਹੋ ਜਾਣਗੇ -->
+  <div class="news-ticker-bar" onclick="syncAllLive()" title="ਲਾਈਵ ਸਿੰਕ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ">
     <div class="live-dot"></div>
     <span class="brand-title">PUNJABI NEWS LIVE</span>
+    <span class="sync-hint">SYNC</span>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -150,8 +159,11 @@
     return (match && match[2].length === 11) ? match[2] : text.trim();
   }
 
+  // ਲਾਈਵ ਪੁਆਇੰਟ ਫੜਨ ਲਈ ਪੈਰਾਮੀਟਰ
   function buildSrc(id) {
-    return "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1";
+    const timeNow = Date.now();
+    return "https://www.youtube-nocookie.com/embed/" + id + 
+           "?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&live=1&_cb=" + timeNow;
   }
 
   const container = document.getElementById("grid");
@@ -171,7 +183,6 @@
       <div class="video-box">
         <iframe id="frame_${i}" 
                 src="${buildSrc(saved)}" 
-                loading="lazy" 
                 allow="autoplay; fullscreen" 
                 allowfullscreen></iframe>
       </div>
@@ -187,6 +198,17 @@
       document.getElementById("frame_" + i).src = buildSrc(vid);
       document.getElementById("in_" + i).value = "";
     }
+  }
+
+  // ਸਾਰੇ ਚੈਨਲਾਂ ਨੂੰ ਇੱਕੋ ਸਮੇਂ ਤਾਜ਼ਾ ਲਾਈਵ 'ਤੇ ਲਿਆਉਣ ਲਈ ਫੰਕਸ਼ਨ
+  function syncAllLive() {
+    streams.forEach((item, i) => {
+      const currentId = localStorage.getItem("yt_clean_slot_" + i) || item.id;
+      const frame = document.getElementById("frame_" + i);
+      if (frame) {
+        frame.src = buildSrc(currentId);
+      }
+    });
   }
 </script>
 </body>
