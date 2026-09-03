@@ -2,30 +2,80 @@
 <html lang="pa">
 <head>
   <meta charset="UTF-8">
-  <title>Clean Multi-Screen Monitoring</title>
+  <title>PUNJABI NEWS LIVE</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #000; color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; }
+    body { 
+      background-color: #050505; 
+      color: #fff; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      height: 100vh; 
+      width: 100vw; 
+      overflow: hidden; 
+      display: flex;
+      flex-direction: column;
+    }
     
-    /* 6 ਸਕ੍ਰੀਨਾਂ ਲਈ 3 ਕਾਲਮ ਅਤੇ 2 ਕਤਾਰਾਂ ਬਿਨਾਂ ਕਿਸੇ ਖ਼ਾਲੀ ਜਗ੍ਹਾ ਦੇ */
+    /* ਸੈਂਟਰ ਵਿੱਚ ਚੱਲਣ ਵਾਲੀ ਪ੍ਰੋਫੈਸ਼ਨਲ ਬ੍ਰਾਂਡਿੰਗ ਪੱਟੀ */
+    .news-ticker-bar {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background: linear-gradient(90deg, rgba(200,0,0,0.95), rgba(120,0,0,0.95));
+      padding: 6px 28px;
+      border-radius: 30px;
+      border: 2px solid #ff3b30;
+      box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .live-dot {
+      width: 12px;
+      height: 12px;
+      background-color: #fff;
+      border-radius: 50%;
+      animation: blink 1.2s infinite ease-in-out;
+      box-shadow: 0 0 8px #fff;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.7); }
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      white-space: nowrap;
+    }
+
+    /* ਵੀਡੀਓ ਗਰਿੱਡ - ਜ਼ੀਰੋ ਗੈਪ */
     .grid { 
       display: grid; 
       grid-template-columns: repeat(3, 1fr); 
       grid-template-rows: repeat(2, 1fr); 
-      gap: 2px; 
+      gap: 0px; 
       height: 100vh; 
       width: 100vw;
-      background: #000;
     }
     
     .card { 
       position: relative; 
       background: #000; 
       overflow: hidden; 
-      display: flex;
+      border: 1px solid #181818;
     }
     
-    /* ਉੱਪਰਲਾ ਬਾਰ ਆਮ ਤੌਰ 'ਤੇ ਲੁਕਿਆ ਰਹੇਗਾ, ਜਦੋਂ ਮਾਊਸ ਉੱਪਰ ਜਾਵੇਗਾ ਤਾਂ ਹੀ ਦਿਖੇਗਾ */
+    /* ਮਾਊਸ ਲੈ ਕੇ ਜਾਣ 'ਤੇ ਹੀ ਦਿਖੇਗਾ ਐਡਿਟ ਕੰਟਰੋਲ */
     .header { 
       position: absolute;
       top: 0;
@@ -36,39 +86,46 @@
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      z-index: 10;
+      z-index: 20;
       opacity: 0;
-      transition: opacity 0.2s ease-in-out;
+      transition: opacity 0.2s;
     }
     
     .card:hover .header { 
       opacity: 1; 
     }
     
-    .title { font-weight: bold; color: #ff3333; font-size: 12px; }
+    .title { font-weight: bold; color: #ff3333; font-size: 11px; }
     .controls { display: flex; gap: 4px; }
-    .controls input { background: #222; border: 1px solid #555; color: #fff; padding: 3px 6px; font-size: 11px; width: 120px; border-radius: 2px; }
-    .controls button { background: #cc0000; color: #fff; border: none; padding: 3px 8px; font-size: 11px; cursor: pointer; border-radius: 2px; }
+    .controls input { background: #222; border: 1px solid #555; color: #fff; padding: 2px 6px; font-size: 11px; width: 110px; border-radius: 3px; }
+    .controls button { background: #cc0000; color: #fff; border: none; padding: 2px 8px; font-size: 11px; cursor: pointer; border-radius: 3px; }
     
+    /* ਵੀਡੀਓਜ਼ ਦੇ YouTube ਕੰਟਰੋਲ ਲੁਕਾਉਣ ਲਈ ਆਕਾਰ */
     .video-box { 
       width: 100%; 
       height: 100%; 
       position: relative; 
+      overflow: hidden;
     }
     
     iframe { 
       position: absolute; 
-      top: 0; 
-      left: 0; 
+      top: -6%;
+      left: 0;
       width: 100%; 
-      height: 100%; 
+      height: 112%; 
       border: none; 
     }
   </style>
 </head>
 <body>
 
-<div class="grid" id="grid"></div>
+  <div class="news-ticker-bar">
+    <div class="live-dot"></div>
+    <span class="brand-title">PUNJABI NEWS LIVE</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
 
 <script>
   const streams = [
@@ -85,7 +142,6 @@
     return (match && match[2].length === 11) ? match[2] : text.trim();
   }
 
-  // controls=0 ਨਾਲ YouTube ਦੇ ਸਾਰੇ ਬਟਨ ਬੰਦ ਹੋ ਜਾਂਦੇ ਹਨ
   function buildSrc(id) {
     return "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1";
   }
