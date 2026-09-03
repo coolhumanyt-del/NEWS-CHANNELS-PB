@@ -17,7 +17,6 @@
       flex-direction: column;
     }
     
-    /* ਸੈਂਟਰ ਬ੍ਰਾਂਡਿੰਗ ਬੈਜ */
     .news-ticker-bar {
       position: absolute;
       top: 50%;
@@ -87,16 +86,16 @@
       border-radius: 4px;
     }
     
-    /* ਹਮੇਸ਼ਾ ਦਿਖਣ ਵਾਲਾ ਛੋਟਾ ਆਡੀਓ ਬਟਨ */
-    .audio-toggle-btn {
+    /* ਲਾਈਟਵੇਟ ਸਾਊਂਡ ਬਟਨ */
+    .audio-btn {
       position: absolute;
       top: 8px;
       left: 8px;
       z-index: 30;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(0, 0, 0, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.4);
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
       width: 32px;
       height: 32px;
       border-radius: 50%;
@@ -104,28 +103,22 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, transform 0.1s;
     }
 
-    .audio-toggle-btn.active {
+    .audio-btn.playing {
       background: #2ed573;
       border-color: #2ed573;
       color: #000;
-      box-shadow: 0 0 12px #2ed573;
+      box-shadow: 0 0 10px #2ed573;
     }
 
-    .audio-toggle-btn:hover {
-      transform: scale(1.1);
-    }
-    
-    /* ਮਾਊਸ ਲੈ ਕੇ ਜਾਣ 'ਤੇ ਲਿੰਕ ਬਦਲਣ ਵਾਲਾ ਹੈਡਰ */
     .header { 
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       background: rgba(8, 13, 26, 0.95); 
-      padding: 6px 10px 6px 48px; 
+      padding: 6px 10px 6px 46px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
@@ -151,12 +144,13 @@
       overflow: hidden;
     }
     
-    .video-box div {
-      position: absolute;
+    iframe { 
+      position: absolute; 
       top: -6%;
       left: 0;
       width: 100%; 
       height: 112%; 
+      border: none; 
     }
   </style>
 </head>
@@ -170,8 +164,6 @@
 
   <div class="grid" id="grid"></div>
 
-<!-- YouTube IFrame API -->
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
   const streams = [
     { title: "DPHH", id: "qZg1JI-_eTs" },
@@ -182,21 +174,25 @@
     { title: "PTC", id: "XJvCiFmOOmM" }
   ];
 
-  let players = [];
+  let currentUnmutedIndex = -1;
 
   function getID(text) {
     const match = text.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
     return (match && match[2].length === 11) ? match[2] : text.trim();
   }
 
+  function makeSrc(id, isMuted = true) {
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&modestbranding=1&rel=0&playsinline=1&live=1`;
+  }
+
   const container = document.getElementById("grid");
 
-  // ਗਰਿੱਡ UI ਤਿਆਰ ਕਰਨਾ
   streams.forEach((item, i) => {
+    const saved = localStorage.getItem("yt_clean_slot_" + i) || item.id;
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <button class="audio-toggle-btn" id="vol_btn_${i}" onclick="toggleAudio(${i})" title="ਆਵਾਜ਼ ਖੋਲ੍ਹੋ/ਬੰਦ ਕਰੋ">🔇</button>
+      <button class="audio-btn" id="btn_${i}" onclick="switchAudio(${i})" title="ਆਵਾਜ਼ ਸੁਣੋ">🔇</button>
       <div class="header">
         <span class="title">${item.title}</span>
         <div class="controls">
@@ -205,57 +201,42 @@
         </div>
       </div>
       <div class="video-box">
-        <div id="yt_player_${i}"></div>
+        <iframe id="frame_${i}" 
+                src="${makeSrc(saved, true)}" 
+                allow="autoplay; fullscreen" 
+                allowfullscreen></iframe>
       </div>
     `;
     container.appendChild(card);
   });
 
-  // YouTube API ਲੋਡ ਹੋਣ 'ਤੇ ਪਲੇਅਰ ਬਣਾਉਣਾ
-  function onYouTubeIframeAPIReady() {
+  function switchAudio(index) {
     streams.forEach((item, i) => {
-      const saved = localStorage.getItem("yt_clean_slot_" + i) || item.id;
-      players[i] = new YT.Player(`yt_player_${i}`, {
-        videoId: saved,
-        playerVars: {
-          autoplay: 1,
-          mute: 1,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1
-        },
-        events: {
-          'onReady': (event) => {
-            event.target.playVideo();
-            event.target.mute();
-          }
-        }
-      });
-    });
-  }
-
-  // ਇੱਕ ਚੈਨਲ ਦੀ ਆਵਾਜ਼ ਚਾਲੂ ਕਰਨਾ ਅਤੇ ਬਾਕੀ ਸਭ ਨੂੰ ਮਿਊਟ ਕਰਨਾ
-  function toggleAudio(index) {
-    players.forEach((player, i) => {
-      const btn = document.getElementById(`vol_btn_${i}`);
-      if (!player || typeof player.isMuted !== 'function') return;
+      const vid = localStorage.getItem("yt_clean_slot_" + i) || item.id;
+      const frame = document.getElementById("frame_" + i);
+      const btn = document.getElementById("btn_" + i);
 
       if (i === index) {
-        if (player.isMuted()) {
-          player.unMute();
-          player.setVolume(100);
-          btn.innerHTML = "🔊";
-          btn.classList.add("active");
-        } else {
-          player.mute();
+        if (currentUnmutedIndex === index) {
+          // ਜੇ ਪਹਿਲਾਂ ਹੀ ਚੱਲ ਰਿਹਾ ਸੀ ਤਾਂ ਦੁਬਾਰਾ ਮਿਊਟ ਕਰ ਦਿਓ
+          frame.src = makeSrc(vid, true);
           btn.innerHTML = "🔇";
-          btn.classList.remove("active");
+          btn.classList.remove("playing");
+          currentUnmutedIndex = -1;
+        } else {
+          // ਆਵਾਜ਼ ਆਨ ਕਰੋ
+          frame.src = makeSrc(vid, false);
+          btn.innerHTML = "🔊";
+          btn.classList.add("playing");
+          currentUnmutedIndex = index;
         }
       } else {
-        player.mute();
+        // ਬਾਕੀ ਸਾਰੇ ਮਿਊਟ ਰਹਿਣਗੇ
+        if (currentUnmutedIndex === i) {
+          frame.src = makeSrc(vid, true);
+        }
         btn.innerHTML = "🔇";
-        btn.classList.remove("active");
+        btn.classList.remove("playing");
       }
     });
   }
@@ -265,20 +246,17 @@
     if (val) {
       const vid = getID(val);
       localStorage.setItem("yt_clean_slot_" + i, vid);
-      if (players[i]) {
-        players[i].loadVideoById(vid);
-      }
+      const isThisUnmuted = (currentUnmutedIndex === i);
+      document.getElementById("frame_" + i).src = makeSrc(vid, !isThisUnmuted);
       document.getElementById("in_" + i).value = "";
     }
   }
 
   function syncAllLive() {
-    players.forEach((player) => {
-      if (player && typeof player.seekTo === 'function') {
-        const duration = player.getDuration();
-        player.seekTo(duration, true);
-        player.playVideo();
-      }
+    streams.forEach((item, i) => {
+      const vid = localStorage.getItem("yt_clean_slot_" + i) || item.id;
+      const isThisUnmuted = (currentUnmutedIndex === i);
+      document.getElementById("frame_" + i).src = makeSrc(vid, !isThisUnmuted);
     });
   }
 </script>
