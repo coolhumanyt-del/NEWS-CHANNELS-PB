@@ -2,17 +2,25 @@
 <html lang="pa">
 <head>
   <meta charset="UTF-8">
-  <title>TV News Multi-Screen</title>
+  <title>News Multi-Screen Monitoring</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #000; color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 4px; height: 100vh; padding: 4px; }
+    body { background-color: #000; color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; }
+    /* 8 ਸਕ੍ਰੀਨਾਂ ਲਈ 4 ਕਾਲਮ ਅਤੇ 2 ਕਤਾਰਾਂ ਦਾ ਲੇਆਉਟ */
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      grid-template-rows: repeat(2, 1fr); 
+      gap: 4px; 
+      height: 100vh; 
+      padding: 4px; 
+    }
     .card { background: #111; display: flex; flex-direction: column; border: 1px solid #222; }
     .header { background: #0a0a0a; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; }
     .title { font-weight: bold; color: #ff3333; font-size: 11px; }
     .controls { display: flex; gap: 3px; }
-    .controls input { background: #1f1f1f; border: 1px solid #444; color: #fff; padding: 2px 4px; font-size: 10px; width: 110px; }
-    .controls button { background: #cc0000; color: #fff; border: none; padding: 2px 6px; font-size: 10px; cursor: pointer; }
+    .controls input { background: #1f1f1f; border: 1px solid #444; color: #fff; padding: 2px 4px; font-size: 10px; width: 100px; border-radius: 2px; }
+    .controls button { background: #cc0000; color: #fff; border: none; padding: 2px 6px; font-size: 10px; cursor: pointer; border-radius: 2px; }
     .video-box { flex: 1; position: relative; }
     iframe { position: absolute; width: 100%; height: 100%; border: none; }
   </style>
@@ -22,13 +30,16 @@
 <div class="grid" id="grid"></div>
 
 <script>
+  // ਕੁੱਲ 8 ਚੈਨਲਾਂ ਦੀ ਲਿਸਟ
   const streams = [
     { title: "DPHH", id: "qZg1JI-_eTs" },
     { title: "NW", id: "KMWcefrAKLg" },
     { title: "SPOKESMAN", id: "-bBXOq-BjVY" },
     { title: "ZEE", id: "eV5KYTHCVnc" },
     { title: "LI", id: "5UPhf1Fo_p8" },
-    { title: "AAJ TAK", id: "Nq2wYlWFucg" }
+    { title: "AAJ TAK", id: "Nq2wYlWFucg" },
+    { title: "PTC", id: "XJvCiFmOOmM" },
+    { title: "TV9", id: "vKfpAJN9o8s" }
   ];
 
   function getID(text) {
@@ -38,8 +49,8 @@
 
   const container = document.getElementById("grid");
 
-  // ਇੱਕ-ਇੱਕ ਕਰਕੇ ਥੋੜ੍ਹੇ ਵਕਫ਼ੇ ਨਾਲ ਲੋਡ ਕਰੇਗਾ ਤਾਂ ਜੋ ਟੀਵੀ ਹੈਂਗ ਨਾ ਹੋਵੇ
   streams.forEach((item, i) => {
+    // ਬ੍ਰਾਊਜ਼ਰ ਮੈਮੋਰੀ ਵਿੱਚੋਂ ਪੁਰਾਣੀ ਸੇਵ ਕੀਤੀ ID ਚੈੱਕ ਕਰੋ
     const saved = localStorage.getItem("yt_slot_" + i) || item.id;
     const card = document.createElement("div");
     card.className = "card";
@@ -55,7 +66,7 @@
         <iframe id="frame_${i}" 
                 src="https://www.youtube-nocookie.com/embed/${saved}?autoplay=1&mute=1&playsinline=1" 
                 loading="lazy" 
-                allow="autoplay; fullscreen" 
+                allow="autoplay; encrypted-media; fullscreen" 
                 allowfullscreen></iframe>
       </div>
     `;
@@ -67,7 +78,7 @@
     if (val) {
       const vid = getID(val);
       localStorage.setItem("yt_slot_" + i, vid);
-      document.getElementById("frame_" + i).src = "https://www.youtube-nocookie.com/embed/" + vid + "?autoplay=1&mute=1";
+      document.getElementById("frame_" + i).src = "https://www.youtube-nocookie.com/embed/" + vid + "?autoplay=1&mute=1&playsinline=1";
       document.getElementById("in_" + i).value = "";
     }
   }
